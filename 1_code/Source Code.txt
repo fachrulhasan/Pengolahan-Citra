@@ -1,14 +1,9 @@
 #include "stdafx.h"
-
 #include "opencv2/imgproc/imgproc.hpp"
-
 #include "opencv2/highgui/highgui.hpp"
-
 #include <sstream>
 #include <string>
-
 #include <cstdio>
-
 #include <iostream>
 #include <opencv2/objdetect/objdetect.hpp>
 #include <opencv2/features2d/features2d.hpp>
@@ -19,14 +14,11 @@
 using namespace cv;
 using namespace std;
 
-
-
-//----------------------------------------------------------------------------
-int H_MIN = 75;
+int H_MIN = 0;
 int H_MAX = 196;
 int S_MIN = 0;
 int S_MAX = 256;
-int V_MIN = 56;
+int V_MIN = 76;
 int V_MAX = 125;
 //default capture width and height
 const int FRAME_WIDTH = 640;
@@ -53,10 +45,9 @@ string intToString(int number){
 	ss << number;
 	return ss.str();
 }
+
 void createTrackbars(){
 	//create window for trackbars
-
-
 	namedWindow(trackbarWindowName, 0);
 	//create memory to store trackbar name on window
 	char TrackbarName[50];
@@ -77,12 +68,10 @@ void createTrackbars(){
 	createTrackbar("S_MAX", trackbarWindowName, &S_MAX, S_MAX, on_trackbar);
 	createTrackbar("V_MIN", trackbarWindowName, &V_MIN, V_MAX, on_trackbar);
 	createTrackbar("V_MAX", trackbarWindowName, &V_MAX, V_MAX, on_trackbar);
-
-
 }
 
-void drawObject(int x, int y, Mat &frame){
-
+void drawObject(int x, int y, Mat &frame)
+{
 	//use some of the openCV drawing functions to draw crosshairs
 	//on your tracked image!
 
@@ -105,11 +94,10 @@ void drawObject(int x, int y, Mat &frame){
 	else line(frame, Point(x, y), Point(FRAME_WIDTH, y), Scalar(0, 255, 0), 2);
 
 	putText(frame, intToString(x) + "," + intToString(y), Point(x, y + 30), 1, 1, Scalar(0, 255, 0), 2);
-
 }
 
-void morphOps(Mat &thresh){
-
+void morphOps(Mat &thresh)
+{
 	//create structuring element that will be used to "dilate" and "erode" image.
 	//the element chosen here is a 3px by 3px rectangle
 
@@ -142,13 +130,12 @@ void CallBackFunc(int event, int x, int y, int flags, void* userdata)
 	else if (event == EVENT_MOUSEMOVE)
 	{
 		cout << "Mouse move over the window - position (" << x << ", " << y << ")" << endl;
-
 	}
 }
 
 
-void trackFilteredObject(int &x, int &y, Mat threshold, Mat &cameraFeed){
-
+void trackFilteredObject(int &x, int &y, Mat threshold, Mat &cameraFeed)
+{
 	Mat temp;
 	threshold.copyTo(temp);
 	//these two vectors needed for output of findContours
@@ -193,10 +180,8 @@ void trackFilteredObject(int &x, int &y, Mat threshold, Mat &cameraFeed){
 		else putText(cameraFeed, "TOO MUCH NOISE! ADJUST FILTER", Point(0, 50), 1, 2, Scalar(0, 0, 255), 2);
 	}
 }
-//--------------------------------------------------------------------------------------------------------------------
+
 void cv_adjustBox(int x, int y, CvPoint& A, CvPoint& B);  // Routine to update Bounding Box corners
-
-
 int main(int argc, char* argv[])
 {
 	VideoCapture cap("yourfile.mp4"); // open the video file for reading
@@ -207,14 +192,31 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
+	double count1 = cap.get(CV_CAP_PROP_FRAME_COUNT); //get the frame count
+	//cap.set(CV_CAP_PROP_POS_FRAMES, count1 - 1); //Set index to last frame
+	namedWindow("MyVideo", CV_WINDOW_AUTOSIZE);
+
 	//namedWindow("Original Video", CV_WINDOW_AUTOSIZE); //create a window called "Original Video"
 	//namedWindow("Brightness Increased", CV_WINDOW_AUTOSIZE); //create a window called "Brightness Increased"
 	//namedWindow("Brightness Decreased", CV_WINDOW_AUTOSIZE); //create a window called "Brightness Decreased"
-
+	int countTime = 0;
 	while (1)
 	{
+		Mat frame1;
+		bool success;
+
+		if (countTime % 5 == 0)
+			success = cap.read(frame1);
+
+		if (!success){
+			cout << "Cannot read  frame " << endl;
+			break;
+		}
+		//imshow("MyVideo", frame1);
+		//if (waitKey(0) == 1);
+		//countTime++;
+
 		Mat frame, frame_gray, edges, Dedges;
-		//------------------------------------------------------------------
 		cap >> frame; // get a new frame from camera
 		bool trackObjects = false;
 		bool useMorphOps = false;
@@ -237,7 +239,6 @@ int main(int argc, char* argv[])
 		//start an infinite loop where webcam feed is copied to cameraFeed matrix
 		//all of our operations will be performed within this loop
 
-
 		//----------------- Fungsi HSV, Threshold
 		while (1){
 			//store image to matrix
@@ -257,36 +258,50 @@ int main(int argc, char* argv[])
 			if (trackObjects)
 				trackFilteredObject(x, y, threshold, cameraFeed);
 			
-			
-			// jaga jaga
-
-			
 			Mat rgb;
 			cvtColor(threshold, rgb, CV_GRAY2BGR);
 
 			cv::rectangle(
 				threshold,
-				cv::Point(200, 140),
-				cv::Point(230, 170),
+				cv::Point(126, 123),
+				cv::Point(150, 138),
+				cv::Scalar(0, 0, 255)
+				);
+
+			cv::rectangle(
+				threshold,
+				cv::Point(126, 123),
+				cv::Point(150, 138),
 				cv::Scalar(100, 100, 100)
-			);
+				);
 
 			cv::rectangle(
 				frame,
-				cv::Point(200, 140),
-				cv::Point(230, 170),
+				cv::Point(126, 123),
+				cv::Point(150, 138),
+				cv::Scalar(0, 0, 255)
+				);
+
+			cv::rectangle(
+				frame,
+				cv::Point(126, 123),
+				cv::Point(150, 138),
 				cv::Scalar(0, 0, 255)
 				);
 
 			cv::rectangle(
 				HSV,
-				cv::Point(200, 140),
-				cv::Point(230, 170),
+				cv::Point(126, 123),
+				cv::Point(150, 138),
 				cv::Scalar(255, 255, 255)
 				);
 
-
-
+			cv::rectangle(
+				HSV,
+				cv::Point(126, 123),
+				cv::Point(150, 138),
+				cv::Scalar(255, 255, 255)
+				);
 
 			//show frames 
 			imshow(windowName2, threshold); // << bagian dimana object lebih mudah ditemukan
@@ -296,10 +311,13 @@ int main(int argc, char* argv[])
 			imshow(windowName, frame);
 			imshow(windowName1, HSV);
 
+			if (countTime % 5 == 0)
+				success = cap.read(frame1);
+					imshow("MyVideo", frame1);
+			countTime++;
+
 			namedWindow("edges", 1);
-
 			bool bSuccess = cap.read(frame); // read a new frame from video
-
 			if (!bSuccess) //if not success, break loop
 			{
 				cout << "Cannot read the frame from video file" << endl;
@@ -310,7 +328,6 @@ int main(int argc, char* argv[])
 			GaussianBlur(edges, edges, Size(7, 7), 1.5, 1.5);
 			Canny(edges, edges, 0, 30, 3);
 			imshow("edges", edges);
-
 			if (waitKey(30) >= 0) break;
 
 			Mat imgH = frame + Scalar(50, 50, 50); //increase the brightness by 75 units
@@ -332,9 +349,5 @@ int main(int argc, char* argv[])
 		//image will not appear without this waitKey() command
 		waitKey(30);
 	}
-
-
-	//------------------------------------------------------------------
-
 	return 0;
 }
