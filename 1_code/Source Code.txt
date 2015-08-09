@@ -35,8 +35,8 @@ const string windowName2 = "Thresholded Video";
 const string windowName3 = "After Morphological Operations";
 const string trackbarWindowName = "Trackbars";
 void on_trackbar(int, void*)
-{//This function gets called whenever a
-	// trackbar position is changed
+{
+	//Empty function
 }
 string intToString(int number){
 
@@ -115,19 +115,19 @@ void morphOps(Mat &thresh)
 //fungsi koordinat mouse
 void CallBackFunc(int event, int x, int y, int flags, void* userdata)
 {
-	if (event == EVENT_LBUTTONDOWN)
+	if (event == EVENT_LBUTTONDOWN)//apabila mouse sebelah kiri ditekan
 	{
 		cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
 	}
-	else if (event == EVENT_RBUTTONDOWN)
+	else if (event == EVENT_RBUTTONDOWN)//apabila mouse sebelah kanan ditekan
 	{
 		cout << "Right button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
 	}
-	else if (event == EVENT_MBUTTONDOWN)
+	else if (event == EVENT_MBUTTONDOWN)//apabila mouse sebelah tengah ditekan
 	{
 		cout << "Middle button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
 	}
-	else if (event == EVENT_MOUSEMOVE)
+	else if (event == EVENT_MOUSEMOVE)//apabila mouse digerakkan
 	{
 		cout << "Mouse move over the window - position (" << x << ", " << y << ")" << endl;
 	}
@@ -138,16 +138,20 @@ void trackFilteredObject(int &x, int &y, Mat threshold, Mat &cameraFeed)
 {
 	Mat temp;
 	threshold.copyTo(temp);
+
 	//these two vectors needed for output of findContours
 	vector< vector<Point> > contours;
 	vector<Vec4i> hierarchy;
+
 	//find contours of filtered image using openCV findContours function
 	findContours(temp, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE);
+
 	//use moments method to find our filtered object
 	double refArea = 0;
 	bool objectFound = false;
 	if (hierarchy.size() > 0) {
 		int numObjects = hierarchy.size();
+
 		//if number of objects greater than MAX_NUM_OBJECTS we have a noisy filter
 		if (numObjects<MAX_NUM_OBJECTS){
 			for (int index = 0; index >= 0; index = hierarchy[index][0]) {
@@ -188,75 +192,75 @@ int main(int argc, char* argv[])
 
 	if (!cap.isOpened())  // if not success, exit program
 	{
-		cout << "Cannot open the video file" << endl;
+		cout << "Cannot open the video file" << endl; //mengeluarkan peringatan bila gagal
 		return -1;
 	}
 
 	double count1 = cap.get(CV_CAP_PROP_FRAME_COUNT); //get the frame count
-	//cap.set(CV_CAP_PROP_POS_FRAMES, count1 - 1); //Set index to last frame
-	namedWindow("MyVideo", CV_WINDOW_AUTOSIZE);
 
-	//namedWindow("Original Video", CV_WINDOW_AUTOSIZE); //create a window called "Original Video"
-	//namedWindow("Brightness Increased", CV_WINDOW_AUTOSIZE); //create a window called "Brightness Increased"
-	//namedWindow("Brightness Decreased", CV_WINDOW_AUTOSIZE); //create a window called "Brightness Decreased"
+	namedWindow("MyVideo", CV_WINDOW_AUTOSIZE); //membuat window baru dengan nama MyVideo
+
 	int countTime = 0;
 	while (1)
 	{
 		Mat frame1;
 		bool success;
 
-		if (countTime % 5 == 0)
+		if (countTime % 5 == 0)	//digunakan untuk menangkap frame yang ada
 			success = cap.read(frame1);
 
-		if (!success){
+		if (!success){	//kalo tidak berhasil, akan keluarkan peringatan "cannot read frame"
 			cout << "Cannot read  frame " << endl;
 			break;
 		}
-		//imshow("MyVideo", frame1);
-		//if (waitKey(0) == 1);
-		//countTime++;
 
 		Mat frame, frame_gray, edges, Dedges;
 		cap >> frame; // get a new frame from camera
 		bool trackObjects = false;
 		bool useMorphOps = false;
+
 		//Matrix to store each frame of the webcam feed
 		Mat cameraFeed;
+
 		//matrix storage for HSV image
 		Mat HSV;
+
 		//matrix storage for binary threshold image
 		Mat threshold;
+
 		//x and y values for the location of the object
 		int x = 0, y = 0;
+
 		//create slider bars for HSV filtering
 		createTrackbars();
+
 		//video capture object to acquire webcam feed
 		VideoCapture capture;
+
 		//open capture object at location zero (default location for webcam)
 		//set height and width of capture frame
 		capture.set(CV_CAP_PROP_FRAME_WIDTH, FRAME_WIDTH);
 		capture.set(CV_CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT);
+
 		//start an infinite loop where webcam feed is copied to cameraFeed matrix
 		//all of our operations will be performed within this loop
-
 		//----------------- Fungsi HSV, Threshold
 		while (1){
-			//store image to matrix
+
+
 			capture.read(cameraFeed);
-			//convert frame from BGR to HSV colorspace
-			cvtColor(frame, HSV, COLOR_BGR2HSV);
-			//filter HSV image between values and store filtered image to
-			//threshold matrix
-			inRange(HSV, Scalar(H_MIN, S_MIN, V_MIN), Scalar(H_MAX, S_MAX, V_MAX), threshold);
+
+			cvtColor(frame, HSV, COLOR_BGR2HSV);	//convert frame from BGR to HSV colorspace
+
+			inRange(HSV, Scalar(H_MIN, S_MIN, V_MIN), Scalar(H_MAX, S_MAX, V_MAX), threshold);	//threshold matrix
+
 			//perform morphological operations on thresholded image to eliminate noise
 			//and emphasize the filtered object(s)
 			if (useMorphOps)
 				morphOps(threshold);
-			//pass in thresholded frame to our object tracking function
-			//this function will return the x and y coordinates of the
-			//filtered object
+			
 			if (trackObjects)
-				trackFilteredObject(x, y, threshold, cameraFeed);
+				trackFilteredObject(x, y, threshold, cameraFeed);	//pass in thresholded frame to our object tracking function
 			
 			Mat rgb;
 			cvtColor(threshold, rgb, CV_GRAY2BGR);
@@ -303,10 +307,10 @@ int main(int argc, char* argv[])
 				cv::Scalar(255, 255, 255)
 				);
 
-			//show frames 
+
 			imshow(windowName2, threshold); // << bagian dimana object lebih mudah ditemukan
-			//memanggil fungsi mouse yang digunakan untuk kordinat
-			setMouseCallback("Thresholded Video", CallBackFunc, NULL);
+
+			setMouseCallback("Thresholded Video", CallBackFunc, NULL);	//memanggil fungsi mouse yang digunakan untuk kordinat
 			setMouseCallback("edges", CallBackFunc, NULL);
 			imshow(windowName, frame);
 			imshow(windowName1, HSV);
@@ -333,10 +337,6 @@ int main(int argc, char* argv[])
 			Mat imgH = frame + Scalar(50, 50, 50); //increase the brightness by 75 units
 			Mat imgL = frame + Scalar(-50, -50, -50); //decrease the brightness by 75 units
 
-			//imshow("Original Video", frame); //show the frame in "Original Video" window
-			//imshow("Brightness Increased", imgH); //show the frame of which brightness increased
-			//imshow("Brightness Decreased", imgL); //show the frame of which brightness decreased
-
 			if (waitKey(30) == 27) //wait for 'esc' key press for 30 ms. If 'esc' key is pressed, break loop
 			{
 				cout << "esc key is pressed by user" << endl;
@@ -344,10 +344,7 @@ int main(int argc, char* argv[])
 			}
 		}
 
-
-		//delay 30ms so that screen can refresh.
-		//image will not appear without this waitKey() command
-		waitKey(30);
+		waitKey(30); //do delay in 30ms.
 	}
-	return 0;
+	return 0; //exit
 }
